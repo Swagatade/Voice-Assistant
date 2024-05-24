@@ -25,7 +25,7 @@ def recognize_speech():
                 print("Recognizing...")
                 command = recognizer.recognize_google(audio)
                 print(f"User said: {command}")
-                return command
+                return command.lower()  # Convert to lowercase for easier comparison
             except sr.UnknownValueError:
                 print("Could not understand audio")
                 speak("Sorry, I couldn't understand that.")
@@ -44,6 +44,9 @@ if __name__ == '__main__':
     while True:
         query = recognize_speech()
         if query:
+            query = query.lower()  # Ensure query is lowercase for consistent comparison
+            print(f"User query: {query}")
+            
             if 'time' in query:
                 current_time = datetime.datetime.now().strftime("%I:%M %p")
                 speak(f"The current time is {current_time}")
@@ -85,7 +88,7 @@ if __name__ == '__main__':
                 location = query.replace("search google map", "").strip()
                 webbrowser.open(f"https://www.google.com/maps/search/{location}")
                 speak(f"Showing {location} on Google Maps.")
-            elif 'bye' in query:
+            elif any(word in query for word in ['bye', 'exit', 'quit', 'goodbye']):
                 speak("Goodbye!")
                 break
             else:
