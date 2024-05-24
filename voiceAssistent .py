@@ -3,6 +3,7 @@ import speech_recognition as sr
 import webbrowser
 import datetime
 
+# Initialize text-to-speech engine
 engine = pyttsx3.init('sapi5')
 voices = engine.getProperty('voices')
 engine.setProperty('voice', voices[0].id)
@@ -11,40 +12,48 @@ def speak(text):
     engine.say(text)
     engine.runAndWait()
 
-speak("Hello, my name is Jarvis, how can I help you today?")
-
-def takeCommand():
-    r = sr.Recognizer()
-    with sr.Microphone() as source:
-        print('Listening....')
-        r.pause_threshold = 1
-        audio = r.listen(source)
+def recognize_speech():
+    recognizer = sr.Recognizer()
     try:
-        print("Recognizing.....")
-        query = r.recognize_google(audio, language='en-in')
-        print("You Said: {} \n".format(query))
-        return query.lower()
+        with sr.Microphone() as source:
+            print("Microphone accessed successfully.")
+            recognizer.adjust_for_ambient_noise(source)  # Adjust for ambient noise
+            print("Listening...")
+            audio = recognizer.listen(source)
+            
+            try:
+                print("Recognizing...")
+                command = recognizer.recognize_google(audio)
+                print(f"User said: {command}")
+                return command
+            except sr.UnknownValueError:
+                print("Could not understand audio")
+                speak("Sorry, I couldn't understand that.")
+                return None
+            except sr.RequestError:
+                print("Could not request results; check your network connection")
+                speak("Sorry, there seems to be a network issue.")
+                return None
     except Exception as e:
-        print("Say That Again....")
+        print(f"Error accessing the microphone: {e}")
+        speak("Sorry, I am having trouble accessing the microphone.")
         return None
 
 if __name__ == '__main__':
+    speak("Hello, my name is Jarvis, how can I help you today?")
     while True:
-        query = takeCommand()
-        print(query)  # Print the recognized query for debugging
-
+        query = recognize_speech()
         if query:
             if 'time' in query:
-                current_time = datetime.datetime.now().strftime("%I:%M %p")  # Get current time
+                current_time = datetime.datetime.now().strftime("%I:%M %p")
                 speak(f"The current time is {current_time}")
             elif 'today date' in query:
-                current_date = datetime.datetime.now().strftime("%A, %B %d, %Y")  # Get current date
+                current_date = datetime.datetime.now().strftime("%A, %B %d, %Y")
                 speak(f"Today is {current_date}")
             elif 'play music' in query:
                 webbrowser.open("https://music.youtube.com")
                 speak("Opening YouTube Music for you. Search for your desired song and enjoy!")
             elif 'play' in query and 'song' in query:
-                # Extracting the song name from the query
                 song_name = query.replace("play", "").replace("song", "").strip()
                 webbrowser.open(f"https://music.youtube.com/search?q={song_name}")
                 speak(f"Searching for {song_name} on YouTube Music. Have fun listening!")
@@ -69,20 +78,16 @@ if __name__ == '__main__':
             elif 'open whatsapp' in query:
                 webbrowser.open("https://web.whatsapp.com")
                 speak("Opening WhatsApp for you.")
-                # Additional logic might be needed to navigate to specific user/account
             elif 'open messenger' in query:
                 webbrowser.open("https://www.messenger.com")
                 speak("Opening Messenger for you.")
-                # Additional logic might be needed to navigate to specific user/account
-            elif 'bye' in query:
-                speak("Goodbye!")
-                break     
             elif 'search google map' in query:
-                # Extracting the location from the query
                 location = query.replace("search google map", "").strip()
-                # Opening Google Maps with the specified location
                 webbrowser.open(f"https://www.google.com/maps/search/{location}")
                 speak(f"Showing {location} on Google Maps.")
-    
+            elif 'bye' in query:
+                speak("Goodbye!")
+                break
             else:
-                webbrowser.open("https://www.google.com/search?q=" + query.replace(" ", "+"))         
+                webbrowser.open("https://www.google.com/search?q=" + query.replace(" ", "+"))
+                speak("Searching the web for you.")
